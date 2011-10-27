@@ -86,6 +86,7 @@ public class Description implements Serializable {
 	 */
 	public static final Description TEST_MECHANISM= new Description("Test mechanism");
 	
+	private Description fParent;
 	private final ArrayList<Description> fChildren= new ArrayList<Description>();
 	private final String fDisplayName;
 	
@@ -101,6 +102,14 @@ public class Description implements Serializable {
 	 */
 	public String getDisplayName() {
 		return fDisplayName;
+	}
+
+	public Description getParent() {
+		return fParent;
+	}
+
+	public void setParent(Description parent) {
+		fParent= parent;
 	}
 
 	/**
@@ -153,8 +162,14 @@ public class Description implements Serializable {
 	public boolean equals(Object obj) {
 		if (!(obj instanceof Description))
 			return false;
-		Description d = (Description) obj;
-		return getDisplayName().equals(d.getDisplayName());
+		Description d= (Description) obj;
+		boolean equals= getDisplayName().equals(d.getDisplayName());
+		if (!equals) {
+			return false;
+		}
+		return (fParent == d.fParent)
+				|| (fParent != null && d.fParent != null && fParent
+						.equals(d.fParent));
 	}
 	
 	@Override

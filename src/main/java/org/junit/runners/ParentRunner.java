@@ -290,11 +290,22 @@ public abstract class ParentRunner<T> extends Runner implements Filterable,
 	
 	@Override
 	public Description getDescription() {
-		Description description= Description.createSuiteDescription(getName(),
-				getRunnerAnnotations());
-		for (T child : getFilteredChildren())
-			description.addChild(describeChild(child));
+		Description description= createDescription();
+		for (T child : getFilteredChildren()) {
+			description.addChild(describeChild(description, child));
+		}
 		return description;
+	}
+
+	private Description createDescription() {
+		return Description.createSuiteDescription(getName(),
+				getRunnerAnnotations());
+	}
+
+	private Description describeChild(Description description, T child) {
+		Description childDescription= describeChild(child);
+		childDescription.setParent(description);
+		return childDescription;
 	}
 
 	@Override
@@ -318,9 +329,10 @@ public abstract class ParentRunner<T> extends Runner implements Filterable,
 	//
 
 	public void filter(Filter filter) throws NoTestsRemainException {
+		Description description = createDescription();
 		for (Iterator<T> iter = getFilteredChildren().iterator(); iter.hasNext(); ) {
 			T each = iter.next();
-			if (shouldRun(filter, each))
+			if (shouldRun(filter, each, description))
 				try {
 					filter.apply(each);
 				} catch (NoTestsRemainException e) {
@@ -362,14 +374,15 @@ public abstract class ParentRunner<T> extends Runner implements Filterable,
 		fSorter.apply(child);
 	}
 
-	private boolean shouldRun(Filter filter, T each) {
-		return filter.shouldRun(describeChild(each));
+	private boolean shouldRun(Filter filter, T each, Description description) {
+		return filter.shouldRun(describeChild(description, each));
 	}
 
 	private Comparator<? super T> comparator() {
+		final Description description = createDescription();
 		return new Comparator<T>() {
 			public int compare(T o1, T o2) {
-				return fSorter.compare(describeChild(o1), describeChild(o2));
+				return fSorter.compare(describeChild(description, o1), describeChild(description, o2));
 			}
 		};
 	}
